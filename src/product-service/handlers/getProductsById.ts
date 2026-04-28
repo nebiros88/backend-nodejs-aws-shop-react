@@ -12,6 +12,9 @@ export const getProductsById = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const product = await getProductById(event.queryStringParameters?.id || '');
+
+    if (!product) throw new Error('Product not found');
+
     return {
       statusCode: 200,
       headers: {
@@ -22,7 +25,7 @@ export const getProductsById = async (
     };
   } catch (error: unknown) {
     return {
-      statusCode: 500,
+      statusCode: 404,
       body: JSON.stringify({
         message: `Failed to load products: ${error instanceof Error ? error.message : 'Unknown error'}`,
       }),
