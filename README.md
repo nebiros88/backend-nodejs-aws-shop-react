@@ -1,14 +1,8 @@
-# Welcome to your CDK TypeScript project
+## Swagger UI
 
-This is a blank project for CDK development with TypeScript.
+- To watch endpoints and schemas documentation use [online swagger editor](https://editor.swagger.io/)
+- openapi config file path is `./docs/openapi.yaml`, just import it into editor
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Service is available under the next URL:
 
-## Useful commands
-
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+- [https://h8j8j6pg2c.execute-api.eu-central-1.amazonaws.com](https://h8j8j6pg2c.execute-api.eu-central-1.amazonaws.com)
