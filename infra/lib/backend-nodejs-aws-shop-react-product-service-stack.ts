@@ -7,7 +7,7 @@ import * as path from 'path';
 
 import { ReusableHttpApiGatewayConstruct } from './reusable-http-api-gateway-construct';
 
-const LAMBDA_HANDLERS_PATH = '../src/product-service/handlers';
+const LAMBDA_HANDLERS_PATH = '../../src/product-service/handlers';
 
 export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
