@@ -1,19 +1,24 @@
 import {
   APIGatewayProxyResult,
-  APIGatewayProxyEvent,
+  APIGatewayProxyEventV2,
   Context,
 } from 'aws-lambda';
 
 import { getProductById } from '../services';
 
 export const getProductsById = async (
-  event: APIGatewayProxyEvent,
+  event: APIGatewayProxyEventV2,
   __context: Context,
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const product = await getProductById(event.queryStringParameters?.id || '');
+    const product = await getProductById(event.pathParameters?.productId || '');
 
-    if (!product) throw new Error('Product not found');
+    if (!product) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: 'Product not found' }),
+      };
+    }
 
     return {
       statusCode: 200,
@@ -25,7 +30,7 @@ export const getProductsById = async (
     };
   } catch (error: unknown) {
     return {
-      statusCode: 404,
+      statusCode: 500,
       body: JSON.stringify({
         message: `Failed to load products: ${error instanceof Error ? error.message : 'Unknown error'}`,
       }),

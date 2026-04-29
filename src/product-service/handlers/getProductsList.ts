@@ -1,17 +1,18 @@
 import {
   APIGatewayProxyResult,
-  APIGatewayProxyEvent,
+  APIGatewayProxyEventV2,
   Context,
 } from 'aws-lambda';
 
 import { getProducts } from '../services';
 
 export const getProductsList = async (
-  __event: APIGatewayProxyEvent,
+  __event: APIGatewayProxyEventV2,
   __context: Context,
 ): Promise<APIGatewayProxyResult> => {
   try {
     const products = await getProducts();
+
     return {
       statusCode: 200,
       headers: {
