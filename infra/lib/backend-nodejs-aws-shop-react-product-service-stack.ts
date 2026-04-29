@@ -28,6 +28,10 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
           __dirname,
           `${LAMBDA_HANDLERS_PATH}/getProductsList.ts`,
         ),
+        bundling: {
+          minify: true,
+          sourceMap: true,
+        },
       },
     );
 
@@ -41,6 +45,10 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
           __dirname,
           `${LAMBDA_HANDLERS_PATH}/getProductsById.ts`,
         ),
+        bundling: {
+          minify: true,
+          sourceMap: true,
+        },
       },
     );
 
