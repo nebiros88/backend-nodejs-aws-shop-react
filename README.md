@@ -1,1 +1,8 @@
-# backend-nodejs-aws-shop-react
+## Swagger UI
+
+- To watch endpoints and schemas documentation use [online swagger editor](https://editor.swagger.io/)
+- openapi config file path is `./docs/openapi.yaml`, just import it into editor
+
+## Service is available under the next URL:
+
+- [https://h8j8j6pg2c.execute-api.eu-central-1.amazonaws.com](https://h8j8j6pg2c.execute-api.eu-central-1.amazonaws.com)

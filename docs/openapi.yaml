@@ -1,0 +1,72 @@
+openapi: '3.0.1'
+info:
+  title: 'shared-http-api'
+  version: '2026-04-29 11:22:27UTC'
+servers:
+  - url: 'https://h8j8j6pg2c.execute-api.eu-central-1.amazonaws.com'
+tags:
+  - name: Products
+    description: Product operations
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      responses:
+        '200':
+          description: 'Successful response'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: 'Product not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      parameters:
+        - name: 'productId'
+          in: 'path'
+          description: 'Generated path parameter for productId'
+          required: true
+          schema:
+            type: 'string'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - price
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string

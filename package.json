@@ -1,0 +1,37 @@
+{
+  "name": "backend-nodejs-aws-shop-react",
+  "version": "0.1.0",
+  "bin": {
+    "backend-nodejs-aws-shop-react": "bin/backend-nodejs-aws-shop-react.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/aws-lambda": "^8.10.161",
+    "@types/jest": "^30",
+    "@types/node": "^24.10.1",
+    "aws-cdk": "2.1118.4",
+    "esbuild": "^0.28.0",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
+    "jest": "^30",
+    "jiti": "^2.6.1",
+    "ts-jest": "^29",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.59.1"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.248.0",
+    "constructs": "^10.5.0"
+  },
+  "private": true,
+  "workspaces": [
+    "services/*"
+  ]
+}
