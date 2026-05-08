@@ -19,12 +19,14 @@ describe('getProductsList handler', () => {
         title: 'Test Product 1',
         description: 'Test product 1 description',
         price: 9,
+        count: 5,
       },
       {
         id: '1234',
         title: 'Test Product 2',
         description: 'Test product 2 description',
         price: 99,
+        count: 5,
       },
     ];
 

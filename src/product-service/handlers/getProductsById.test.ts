@@ -18,6 +18,7 @@ describe('getProductsById handler', () => {
       title: 'Test Product 1',
       description: 'Test product 1 description',
       price: 9,
+      count: 5,
     };
 
     mockedGetProductById.mockResolvedValue(mockedProduct);

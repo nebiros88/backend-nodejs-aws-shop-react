@@ -23,6 +23,12 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+        '500':
+          description: 'Internal server error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     post:
       summary: 'Create Product'
       tags:
@@ -40,6 +46,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateProductDto'
+        '400':
+          description: 'Invalid product data!'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 'Internal server error'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /products/{productId}:
     get:
@@ -55,6 +73,12 @@ paths:
                 $ref: '#/components/schemas/Product'
         '404':
           description: 'Product not found'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 'Internal server error'
           content:
             application/json:
               schema:
