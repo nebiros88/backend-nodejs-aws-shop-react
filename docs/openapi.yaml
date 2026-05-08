@@ -11,6 +11,7 @@ tags:
 paths:
   /products:
     get:
+      summary: 'Get list of products'
       tags:
         - Products
       responses:
@@ -22,8 +23,27 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Product'
+    post:
+      summary: 'Create Product'
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductDto'
+      responses:
+        '201':
+          description: 'Successful response'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateProductDto'
+
   /products/{productId}:
     get:
+      summary: 'Get product by id'
       tags:
         - Products
       responses:
@@ -56,6 +76,7 @@ components:
         - title
         - description
         - price
+        - count
       properties:
         id:
           type: string
@@ -65,6 +86,26 @@ components:
           type: string
         price:
           type: number
+        count:
+          type: number
+
+    CreateProductDto:
+      type: object
+      required:
+        - title
+        - description
+        - price
+        - count
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        count:
+          type: number
+
     ErrorResponse:
       type: object
       properties:
