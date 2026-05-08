@@ -1,7 +1,12 @@
-import { ScanCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  ScanCommand,
+  GetCommand,
+  TransactWriteCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { PRODUCTS_TABLE_NAME, STOCKS_TABLE_NAME } from '../constants';
 import { dynamoDbClient } from '../libs';
-import { Product, TableProduct, TableStock } from '../models';
+import { CreateProductDto, Product, TableProduct, TableStock } from '../models';
+import { v4 as uuid } from 'uuid';
 
 export const getProducts = async (): Promise<Array<Product>> => {
   const [productsResponse, stocksResponse] = await Promise.all([
@@ -58,4 +63,43 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     ...productResponse.Item,
     count: stockResponse?.Item?.count || 0,
   } as Product;
+};
+
+export const createNewProduct = async (
+  dto: CreateProductDto,
+): Promise<Product> => {
+  const id = uuid();
+  const product = {
+    id,
+    ...dto,
+  };
+
+  const stock = {
+    product_id: id,
+    count: dto.count,
+  };
+
+  await dynamoDbClient.send(
+    new TransactWriteCommand({
+      TransactItems: [
+        {
+          Put: {
+            TableName: PRODUCTS_TABLE_NAME,
+            Item: product,
+          },
+        },
+        {
+          Put: {
+            TableName: STOCKS_TABLE_NAME,
+            Item: stock,
+          },
+        },
+      ],
+    }),
+  );
+
+  return {
+    ...product,
+    count: stock.count,
+  };
 };

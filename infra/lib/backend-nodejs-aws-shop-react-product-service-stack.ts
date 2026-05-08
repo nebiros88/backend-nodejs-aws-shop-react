@@ -70,19 +70,32 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       },
     );
 
+    const createProductLambda = new NodejsFunction(
+      this,
+      'createProductLambda',
+      {
+        handler: 'createProduct',
+        entry: path.join(__dirname, `${LAMBDA_HANDLERS_PATH}/createProduct.ts`),
+        ...commonLambdaProps,
+      },
+    );
+
     api.addLambda('/products', apigwv2.HttpMethod.GET, getProductsListLambda);
     api.addLambda(
       '/products/{productId}',
       apigwv2.HttpMethod.GET,
       getProductsByIdLambda,
     );
+    api.addLambda('/products', apigwv2.HttpMethod.POST, createProductLambda);
 
     // grant IAM permissions to lambdas to access DynamoDB
     productsTable.grantReadWriteData(getProductsListLambda);
     productsTable.grantReadWriteData(getProductsByIdLambda);
+    productsTable.grantWriteData(createProductLambda);
 
     stocksTable.grantReadWriteData(getProductsListLambda);
     stocksTable.grantReadWriteData(getProductsByIdLambda);
+    stocksTable.grantWriteData(createProductLambda);
 
     // output
     new cdk.CfnOutput(this, 'ApiUrl', {
