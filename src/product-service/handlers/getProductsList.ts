@@ -7,9 +7,12 @@ import {
 import { getProducts } from '../services';
 
 export const getProductsList = async (
-  __event: APIGatewayProxyEventV2,
+  event: APIGatewayProxyEventV2,
   __context: Context,
 ): Promise<APIGatewayProxyResult> => {
+  // Each console.log automatically goes to CloudWatch Logs
+  console.log(`Incoming event: ${JSON.stringify(event)}`);
+
   try {
     const products = await getProducts();
 

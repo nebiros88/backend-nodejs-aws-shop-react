@@ -10,6 +10,10 @@ export const createProduct = async (
   event: APIGatewayProxyEventV2,
   __context: Context,
 ): Promise<APIGatewayProxyResult> => {
+  // Each console.log automatically goes to CloudWatch Logs
+  console.log(`Incoming event: ${JSON.stringify(event)}`);
+  console.log(`Create product body: ${JSON.stringify(event.body)}`);
+
   try {
     if (!event.body) {
       return {
