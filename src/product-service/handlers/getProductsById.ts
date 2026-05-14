@@ -10,6 +10,9 @@ export const getProductsById = async (
   event: APIGatewayProxyEventV2,
   __context: Context,
 ): Promise<APIGatewayProxyResult> => {
+  // Each console.log automatically goes to CloudWatch Logs
+  console.log(`Incoming event: ${JSON.stringify(event)}`);
+  console.log(`Product Id: ${JSON.stringify(event.pathParameters?.productId)}`);
   try {
     const product = await getProductById(event.pathParameters?.productId || '');
 

@@ -1,8 +1,9 @@
-import * as cdk from 'aws-cdk-lib/core';
+import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
-import { Construct } from 'constructs';
+import * as dynamoDb from 'aws-cdk-lib/aws-dynamodb';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Construct } from 'constructs';
 import * as path from 'path';
 
 import { ReusableHttpApiGatewayConstruct } from './reusable-http-api-gateway-construct';
@@ -18,20 +19,41 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       apiName: 'shared-http-api',
     });
 
+    // import already created dynamoDb tables (products and stocks)
+    const productsTable = dynamoDb.Table.fromTableName(
+      this,
+      'ProductsTable',
+      'products',
+    );
+
+    const stocksTable = dynamoDb.Table.fromTableName(
+      this,
+      'StocksTable',
+      'stocks',
+    );
+
+    const commonLambdaProps: cdk.aws_lambda_nodejs.NodejsFunctionProps = {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      bundling: {
+        minify: true,
+        sourceMap: true,
+      },
+      environment: {
+        PRODUCTS_TABLE_NAME: productsTable.tableName,
+        STOCKS_TABLE_NAME: stocksTable.tableName,
+      },
+    };
+
     const getProductsListLambda = new NodejsFunction(
       this,
       'getProductsListLambda',
       {
-        runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'getProductsList',
         entry: path.join(
           __dirname,
           `${LAMBDA_HANDLERS_PATH}/getProductsList.ts`,
         ),
-        bundling: {
-          minify: true,
-          sourceMap: true,
-        },
+        ...commonLambdaProps,
       },
     );
 
@@ -39,16 +61,22 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       this,
       'getProductsByIdLambda',
       {
-        runtime: lambda.Runtime.NODEJS_20_X,
         handler: 'getProductsById',
         entry: path.join(
           __dirname,
           `${LAMBDA_HANDLERS_PATH}/getProductsById.ts`,
         ),
-        bundling: {
-          minify: true,
-          sourceMap: true,
-        },
+        ...commonLambdaProps,
+      },
+    );
+
+    const createProductLambda = new NodejsFunction(
+      this,
+      'createProductLambda',
+      {
+        handler: 'createProduct',
+        entry: path.join(__dirname, `${LAMBDA_HANDLERS_PATH}/createProduct.ts`),
+        ...commonLambdaProps,
       },
     );
 
@@ -58,7 +86,18 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       apigwv2.HttpMethod.GET,
       getProductsByIdLambda,
     );
+    api.addLambda('/products', apigwv2.HttpMethod.POST, createProductLambda);
 
+    // grant IAM permissions to lambdas to access DynamoDB
+    productsTable.grantReadWriteData(getProductsListLambda);
+    productsTable.grantReadWriteData(getProductsByIdLambda);
+    productsTable.grantWriteData(createProductLambda);
+
+    stocksTable.grantReadWriteData(getProductsListLambda);
+    stocksTable.grantReadWriteData(getProductsByIdLambda);
+    stocksTable.grantWriteData(createProductLambda);
+
+    // output
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: api.httpApi.url!,
     });
