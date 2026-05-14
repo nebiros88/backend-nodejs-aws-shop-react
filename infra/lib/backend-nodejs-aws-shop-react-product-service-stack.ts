@@ -107,7 +107,7 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       this,
       'importProductsFileLambda',
       {
-        handler: 'createProduct',
+        handler: 'importProductsFile',
         entry: path.join(
           __dirname,
           `${IMPORT_SERVICE_LAMBDA_HANDLERS_PATH}/importProductsFile.ts`,
