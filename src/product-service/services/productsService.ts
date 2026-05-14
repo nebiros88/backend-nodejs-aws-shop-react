@@ -65,18 +65,19 @@ export const getProductById = async (id: string): Promise<Product | null> => {
   } as Product;
 };
 
-export const createNewProduct = async (
-  dto: CreateProductDto,
-): Promise<Product> => {
+export const createNewProduct = async ({
+  count,
+  ...restDto
+}: CreateProductDto): Promise<Product> => {
   const id = uuid();
   const product = {
     id,
-    ...dto,
+    ...restDto,
   };
 
   const stock = {
     product_id: id,
-    count: dto.count,
+    count,
   };
 
   await dynamoDbClient.send(
