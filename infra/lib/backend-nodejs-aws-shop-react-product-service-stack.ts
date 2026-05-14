@@ -114,6 +114,7 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
         ),
         environment: {
           AWS_S3_IMPORT_BUCKET_NAME: importBucket.bucketName,
+          AWS_S3_IMPORT_BUCKET_REGION: this.region,
         },
         ...commonLambdaProps,
       },
