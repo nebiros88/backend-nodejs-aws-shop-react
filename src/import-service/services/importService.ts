@@ -41,7 +41,7 @@ export const parseImportedFile = async (s3Event: S3Event): Promise<void> => {
       stream
         .pipe(csv())
         .on('data', (data) => {
-          console.log(`CSV record: ${data}`);
+          console.log(`CSV record: ${JSON.stringify(data)}`);
         })
         .on('end', resolve)
         .on('error', reject);
