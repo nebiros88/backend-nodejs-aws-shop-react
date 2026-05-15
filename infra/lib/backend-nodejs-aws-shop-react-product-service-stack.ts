@@ -4,6 +4,7 @@ import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as dynamoDb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -120,6 +121,22 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       },
     );
 
+    const importFileParserLambda = new NodejsFunction(
+      this,
+      'importFileParserLambda',
+      {
+        handler: 'importFileParser',
+        entry: path.join(
+          __dirname,
+          `${IMPORT_SERVICE_LAMBDA_HANDLERS_PATH}/importFileParser.ts`,
+        ),
+        environment: {
+          AWS_S3_IMPORT_BUCKET_REGION: this.region,
+        },
+        ...commonLambdaProps,
+      },
+    );
+
     api.addLambda('/products', apigwv2.HttpMethod.GET, getProductsListLambda);
 
     api.addLambda(
@@ -145,6 +162,16 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
 
     // grant IAM permissions to access S3Bucket
     importBucket.grantPut(importProductsFileLambda);
+    importBucket.grantPut(importFileParserLambda);
+
+    // S3Bucket event configuration
+    importBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(importFileParserLambda),
+      {
+        prefix: 'uploaded/',
+      },
+    );
 
     // output
     new cdk.CfnOutput(this, 'ApiUrl', {
