@@ -162,7 +162,7 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
 
     // grant IAM permissions to access S3Bucket
     importBucket.grantPut(importProductsFileLambda);
-    importBucket.grantRead(importFileParserLambda);
+    importBucket.grantReadWrite(importFileParserLambda);
 
     // S3Bucket event configuration
     importBucket.addEventNotification(

@@ -1,4 +1,6 @@
 import {
+  CopyObjectCommand,
+  DeleteObjectCommand,
   GetObjectCommand,
   PutObjectCommand,
   S3Client,
@@ -46,5 +48,26 @@ export const parseImportedFile = async (s3Event: S3Event): Promise<void> => {
         .on('end', resolve)
         .on('error', reject);
     });
+
+    // copy parsed object into 'parsed/' bucket folder
+    const parsedKey = key.replace(/^uploaded\//, 'parsed/');
+
+    await client.send(
+      new CopyObjectCommand({
+        Bucket: bucket,
+        CopySource: `${bucket}/${key}`,
+        Key: parsedKey,
+      }),
+    );
+
+    // delete parsed object from 'uploaded' bucket folder
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      }),
+    );
+
+    console.log(`File moved from ${key} to ${parsedKey}`);
   }
 };
