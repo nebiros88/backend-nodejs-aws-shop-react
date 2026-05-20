@@ -5,6 +5,8 @@ import * as dynamoDb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -43,6 +45,14 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       'import-bucket-144554328995-eu-central-1-an',
     );
 
+    // SQS queue configuration
+    const catalogItemsQueue = new Queue(this, 'catalogItemsQueue', {
+      queueName: 'catalogItemsQueue',
+      visibilityTimeout: cdk.Duration.seconds(300),
+      receiveMessageWaitTime: cdk.Duration.seconds(20),
+    });
+
+    // lambdas creation
     const dynamoDbTableEnvironmentVariables = {
       PRODUCTS_TABLE_NAME: productsTable.tableName,
       STOCKS_TABLE_NAME: stocksTable.tableName,
@@ -137,6 +147,24 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       },
     );
 
+    const catalogBatchProcessLambda = new NodejsFunction(
+      this,
+      'catalogBatchProcessLambda',
+      {
+        handler: 'catalogBatchProcess',
+        entry: path.join(
+          __dirname,
+          `${PRODUCT_SERVICE_LAMBDA_HANDLERS_PATH}/catalogBatchProcess.ts`,
+        ),
+        timeout: cdk.Duration.seconds(30), // important timeout to process 5 items from SQS queue
+        environment: {
+          ...dynamoDbTableEnvironmentVariables,
+        },
+        ...commonLambdaProps,
+      },
+    );
+
+    // APIGateway lambdas integration
     api.addLambda('/products', apigwv2.HttpMethod.GET, getProductsListLambda);
 
     api.addLambda(
@@ -171,6 +199,15 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       {
         prefix: 'uploaded/',
       },
+    );
+
+    // lambdas event source configuration
+    catalogBatchProcessLambda.addEventSource(
+      new eventSources.SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+        maxBatchingWindow: cdk.Duration.seconds(10),
+        reportBatchItemFailures: true, // lambda handler should properly process batch failure if set to 'true'
+      }),
     );
 
     // output
