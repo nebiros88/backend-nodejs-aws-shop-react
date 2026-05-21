@@ -35,6 +35,10 @@ export const parseImportedFile = async (s3Event: S3Event): Promise<void> => {
   const client = new S3Client({ region: AWS_S3_IMPORT_BUCKET_REGION });
   const sqsClient = new SQSClient({ region: AWS_S3_IMPORT_BUCKET_REGION });
 
+  // collect promises to send them all, csv parser does not wait fow async handlers
+  // and an empty message will be sent to SQS
+  const sendPromises: Promise<unknown>[] = [];
+
   for (const record of s3Event.Records) {
     const bucket = record.s3.bucket.name;
     const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, ' '));
@@ -45,22 +49,26 @@ export const parseImportedFile = async (s3Event: S3Event): Promise<void> => {
     await new Promise((resolve, reject) => {
       stream
         .pipe(csv())
-        .on('data', async (data) => {
-          // console.log(`CSV record: ${JSON.stringify(data)}`);
-          try {
-            await sqsClient.send(
+        .on('data', (data) => {
+          sendPromises.push(
+            sqsClient.send(
               new SendMessageCommand({
                 QueueUrl: AWS_SQS_CATALOG_ITEMS_QUEUE_URL,
-                MessageBody: JSON.stringify(data),
+                MessageBody: JSON.stringify({
+                  ...data,
+                  price: Number(data.price),
+                  count: Number(data.count),
+                }),
               }),
-            );
-          } catch (error) {
-            reject(error);
-          }
+            ),
+          );
         })
         .on('end', resolve)
         .on('error', reject);
     });
+
+    await Promise.all(sendPromises);
+    console.log('All messages have been sent into SQS queue!');
 
     // copy parsed object into 'parsed/' bucket folder
     const parsedKey = key.replace(/^uploaded\//, 'parsed/');

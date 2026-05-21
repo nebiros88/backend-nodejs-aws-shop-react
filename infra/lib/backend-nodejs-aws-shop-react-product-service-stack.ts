@@ -213,10 +213,12 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
     productsTable.grantReadWriteData(getProductsListLambda);
     productsTable.grantReadWriteData(getProductsByIdLambda);
     productsTable.grantWriteData(createProductLambda);
+    productsTable.grantWriteData(catalogBatchProcessLambda);
 
     stocksTable.grantReadWriteData(getProductsListLambda);
     stocksTable.grantReadWriteData(getProductsByIdLambda);
     stocksTable.grantWriteData(createProductLambda);
+    stocksTable.grantWriteData(catalogBatchProcessLambda);
 
     // grant IAM permissions to access S3Bucket
     importBucket.grantPut(importProductsFileLambda);
