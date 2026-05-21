@@ -69,7 +69,7 @@ describe('catalogBatchProcess handler', () => {
     expect(mockedValidateCreateProductDto).toHaveBeenCalledWith(validDto);
     expect(mockedCreateNewProduct).toHaveBeenCalledWith(validDto);
     expect(mockedPublishBatchProductsCreationNotification).toHaveBeenCalledWith(
-      JSON.stringify([createdProduct], null, 2),
+      createdProduct,
     );
     expect(result).toEqual({
       batchItemFailures: [],
