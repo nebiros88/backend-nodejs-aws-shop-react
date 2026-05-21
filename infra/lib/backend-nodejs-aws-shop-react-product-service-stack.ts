@@ -7,7 +7,7 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
-import { Topic } from 'aws-cdk-lib/aws-sns';
+import { Topic, SubscriptionFilter } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
 
 import { Construct } from 'constructs';
@@ -61,7 +61,23 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
     });
 
     createProductTopic.addSubscription(
-      new EmailSubscription('siarheikorbut1988@gmail.com'),
+      new EmailSubscription('siarheikorbut1988@gmail.com', {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            greaterThanOrEqualTo: 99,
+          }),
+        },
+      }),
+    );
+
+    createProductTopic.addSubscription(
+      new EmailSubscription('nebiros1988@gmail.com', {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            lessThan: 99,
+          }),
+        },
+      }),
     );
 
     // lambdas creation

@@ -35,9 +35,9 @@ export const catalogBatchProcess = async (
   }
 
   if (createdProducts.length > 0) {
-    await publishBatchProductsCreationNotification(
-      JSON.stringify(createdProducts, null, 2),
-    );
+    for (const product of createdProducts) {
+      await publishBatchProductsCreationNotification(product);
+    }
   }
 
   const response: SQSBatchResponse = {
