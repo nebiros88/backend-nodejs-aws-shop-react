@@ -7,6 +7,10 @@ interface ReusableHttpApiProps {
   apiName: string;
 }
 
+interface LambdaRouteOptions {
+  queryParams?: string[];
+}
+
 export class ReusableHttpApiGatewayConstruct extends Construct {
   public readonly httpApi: apigwv2.HttpApi;
 
@@ -32,6 +36,7 @@ export class ReusableHttpApiGatewayConstruct extends Construct {
     path: string,
     method: apigwv2.HttpMethod,
     lambda: IFunction,
+    options?: LambdaRouteOptions,
   ) {
     this.httpApi.addRoutes({
       path,
@@ -41,5 +46,11 @@ export class ReusableHttpApiGatewayConstruct extends Construct {
         lambda,
       ),
     });
+
+    if (options?.queryParams) {
+      console.log(
+        `Route ${path} expects query params: ${options.queryParams.join(', ')}`,
+      );
+    }
   }
 }

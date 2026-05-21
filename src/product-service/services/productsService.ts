@@ -3,10 +3,10 @@ import {
   GetCommand,
   TransactWriteCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { v4 as uuid } from 'uuid';
 import { PRODUCTS_TABLE_NAME, STOCKS_TABLE_NAME } from '../constants';
 import { dynamoDbClient } from '../libs';
 import { CreateProductDto, Product, TableProduct, TableStock } from '../models';
-import { v4 as uuid } from 'uuid';
 
 export const getProducts = async (): Promise<Array<Product>> => {
   const [productsResponse, stocksResponse] = await Promise.all([
@@ -65,18 +65,19 @@ export const getProductById = async (id: string): Promise<Product | null> => {
   } as Product;
 };
 
-export const createNewProduct = async (
-  dto: CreateProductDto,
-): Promise<Product> => {
+export const createNewProduct = async ({
+  count,
+  ...restDto
+}: CreateProductDto): Promise<Product> => {
   const id = uuid();
   const product = {
     id,
-    ...dto,
+    ...restDto,
   };
 
   const stock = {
     product_id: id,
-    count: dto.count,
+    count,
   };
 
   await dynamoDbClient.send(
