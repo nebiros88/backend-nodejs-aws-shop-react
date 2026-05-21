@@ -142,6 +142,7 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
         ),
         environment: {
           AWS_S3_IMPORT_BUCKET_REGION: this.region,
+          AWS_SQS_CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl,
         },
         ...commonLambdaProps,
       },
@@ -209,6 +210,9 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
         reportBatchItemFailures: true, // lambda handler should properly process batch failure if set to 'true'
       }),
     );
+
+    // SQS queue grant permissions
+    catalogItemsQueue.grantSendMessages(importFileParserLambda);
 
     // output
     new cdk.CfnOutput(this, 'ApiUrl', {
