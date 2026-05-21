@@ -7,6 +7,9 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { Topic } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -51,6 +54,15 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       visibilityTimeout: cdk.Duration.seconds(300),
       receiveMessageWaitTime: cdk.Duration.seconds(20),
     });
+
+    // SNS topic config
+    const createProductTopic = new Topic(this, 'createProductTopic', {
+      displayName: 'createProductTopic',
+    });
+
+    createProductTopic.addSubscription(
+      new EmailSubscription('siarheikorbut1988@gmail.com'),
+    );
 
     // lambdas creation
     const dynamoDbTableEnvironmentVariables = {
@@ -160,6 +172,7 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
         timeout: cdk.Duration.seconds(30), // important timeout to process 5 items from SQS queue
         environment: {
           ...dynamoDbTableEnvironmentVariables,
+          AWS_SNS_CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn,
         },
         ...commonLambdaProps,
       },
@@ -213,6 +226,9 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
 
     // SQS queue grant permissions
     catalogItemsQueue.grantSendMessages(importFileParserLambda);
+
+    // SNS topic grant permissions
+    createProductTopic.grantPublish(catalogBatchProcessLambda);
 
     // output
     new cdk.CfnOutput(this, 'ApiUrl', {

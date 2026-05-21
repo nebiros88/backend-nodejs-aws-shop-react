@@ -1,12 +1,16 @@
 import { SQSEvent, SQSBatchItemFailure, SQSBatchResponse } from 'aws-lambda';
-import { CreateProductDto } from '../models';
-import { createNewProduct } from '../services';
+import { CreateProductDto, Product } from '../models';
+import {
+  createNewProduct,
+  publishBatchProductsCreationNotification,
+} from '../services';
 import { validateCreateProductDto } from '../utils';
 
 export const catalogBatchProcess = async (
   event: SQSEvent,
 ): Promise<SQSBatchResponse> => {
   const batchErrorFailedObjects: Array<SQSBatchItemFailure> = [];
+  const createdProducts: Array<Product> = [];
 
   for (const record of event.Records) {
     try {
@@ -17,7 +21,8 @@ export const catalogBatchProcess = async (
         throw new Error(JSON.stringify(errors));
       }
 
-      await createNewProduct(parsedDto);
+      const createdProduct = await createNewProduct(parsedDto);
+      createdProducts.push(createdProduct);
 
       console.log(`Successfully processed record: ${record.body}`);
     } catch (error) {
@@ -27,6 +32,12 @@ export const catalogBatchProcess = async (
 
       batchErrorFailedObjects.push({ itemIdentifier: record.messageId });
     }
+  }
+
+  if (createdProducts.length > 0) {
+    await publishBatchProductsCreationNotification(
+      JSON.stringify(createdProducts, null, 2),
+    );
   }
 
   const response: SQSBatchResponse = {
