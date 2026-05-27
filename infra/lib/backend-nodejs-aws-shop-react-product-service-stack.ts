@@ -9,7 +9,7 @@ import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { Topic, SubscriptionFilter } from 'aws-cdk-lib/aws-sns';
 import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
-
+import * as apigwAuthorizers from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -194,6 +194,26 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       },
     );
 
+    //import basicAuthorizer lambda from another stack
+    const basicAuthorizerLambdaArn = cdk.Fn.importValue(
+      'BasicAuthorizerLambdaArn',
+    );
+
+    const basicAuthorizerLambda = lambda.Function.fromFunctionArn(
+      this,
+      'ImportedBasicAuthorizerLAmbda',
+      basicAuthorizerLambdaArn,
+    );
+
+    const basicAuthorizer = new apigwAuthorizers.HttpLambdaAuthorizer(
+      'BasicAuthorizer',
+      basicAuthorizerLambda,
+      {
+        responseTypes: [apigwAuthorizers.HttpLambdaResponseType.IAM],
+        identitySource: ['$request.header.Authorization'],
+      },
+    );
+
     // APIGateway lambdas integration
     api.addLambda('/products', apigwv2.HttpMethod.GET, getProductsListLambda);
 
@@ -207,6 +227,7 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
 
     api.addLambda('/import', apigwv2.HttpMethod.GET, importProductsFileLambda, {
       queryParams: ['name'],
+      authorizer: basicAuthorizer,
     });
 
     // grant IAM permissions to lambdas to access DynamoDB
