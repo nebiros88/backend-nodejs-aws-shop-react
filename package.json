@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "seed:products": "node --env-file=.env -r ts-node/register src/product-service/scripts/seed.ts"
+    "seed:products": "node --env-file=.env -r ts-node/register src/product-service/scripts/seed.ts",
+    "cdk:deploy": "node --env-file=.env ./node_modules/aws-cdk/bin/cdk deploy"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
