@@ -199,10 +199,13 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       'BasicAuthorizerLambdaArn',
     );
 
-    const basicAuthorizerLambda = lambda.Function.fromFunctionArn(
+    const basicAuthorizerLambda = lambda.Function.fromFunctionAttributes(
       this,
-      'ImportedBasicAuthorizerLAmbda',
-      basicAuthorizerLambdaArn,
+      'ImportedBasicAuthorizerLambda',
+      {
+        functionArn: basicAuthorizerLambdaArn,
+        sameEnvironment: true,
+      },
     );
 
     const basicAuthorizer = new apigwAuthorizers.HttpLambdaAuthorizer(
