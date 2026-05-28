@@ -4,7 +4,20 @@ import { BackendNodejsAwsShopReactProductServiceStack } from '../lib/backend-nod
 import { BackendNodejsAwsShopReactAuthorizationServiceStack } from '../lib/backend-nodejs-aws-shop-react-authorization-service-stack';
 
 const app = new cdk.App();
-new BackendNodejsAwsShopReactProductServiceStack(
+
+const authorizationServiceStack =
+  new BackendNodejsAwsShopReactAuthorizationServiceStack(
+    app,
+    'BackendNodejsAwsShopReactAuthorizationServiceStack',
+    {
+      env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION,
+      },
+    },
+  );
+
+const productServiceStack = new BackendNodejsAwsShopReactProductServiceStack(
   app,
   'BackendNodejsAwsShopReactProductServiceStack',
   {
@@ -20,13 +33,4 @@ new BackendNodejsAwsShopReactProductServiceStack(
   },
 );
 
-new BackendNodejsAwsShopReactAuthorizationServiceStack(
-  app,
-  'BackendNodejsAwsShopReactAuthorizationServiceStack',
-  {
-    env: {
-      account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: process.env.CDK_DEFAULT_REGION,
-    },
-  },
-);
+productServiceStack.addDependency(authorizationServiceStack);
