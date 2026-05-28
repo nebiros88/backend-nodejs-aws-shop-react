@@ -5,6 +5,11 @@ import * as dynamoDb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as eventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import { Queue } from 'aws-cdk-lib/aws-sqs';
+import { Topic, SubscriptionFilter } from 'aws-cdk-lib/aws-sns';
+import { EmailSubscription } from 'aws-cdk-lib/aws-sns-subscriptions';
+
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -43,6 +48,39 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
       'import-bucket-144554328995-eu-central-1-an',
     );
 
+    // SQS queue configuration
+    const catalogItemsQueue = new Queue(this, 'catalogItemsQueue', {
+      queueName: 'catalogItemsQueue',
+      visibilityTimeout: cdk.Duration.seconds(300),
+      receiveMessageWaitTime: cdk.Duration.seconds(20),
+    });
+
+    // SNS topic config
+    const createProductTopic = new Topic(this, 'createProductTopic', {
+      displayName: 'createProductTopic',
+    });
+
+    createProductTopic.addSubscription(
+      new EmailSubscription('siarheikorbut1988@gmail.com', {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            greaterThanOrEqualTo: 99,
+          }),
+        },
+      }),
+    );
+
+    createProductTopic.addSubscription(
+      new EmailSubscription('nebiros1988@gmail.com', {
+        filterPolicy: {
+          price: SubscriptionFilter.numericFilter({
+            lessThan: 99,
+          }),
+        },
+      }),
+    );
+
+    // lambdas creation
     const dynamoDbTableEnvironmentVariables = {
       PRODUCTS_TABLE_NAME: productsTable.tableName,
       STOCKS_TABLE_NAME: stocksTable.tableName,
@@ -132,11 +170,31 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
         ),
         environment: {
           AWS_S3_IMPORT_BUCKET_REGION: this.region,
+          AWS_SQS_CATALOG_ITEMS_QUEUE_URL: catalogItemsQueue.queueUrl,
         },
         ...commonLambdaProps,
       },
     );
 
+    const catalogBatchProcessLambda = new NodejsFunction(
+      this,
+      'catalogBatchProcessLambda',
+      {
+        handler: 'catalogBatchProcess',
+        entry: path.join(
+          __dirname,
+          `${PRODUCT_SERVICE_LAMBDA_HANDLERS_PATH}/catalogBatchProcess.ts`,
+        ),
+        timeout: cdk.Duration.seconds(30), // important timeout to process 5 items from SQS queue
+        environment: {
+          ...dynamoDbTableEnvironmentVariables,
+          AWS_SNS_CREATE_PRODUCT_TOPIC_ARN: createProductTopic.topicArn,
+        },
+        ...commonLambdaProps,
+      },
+    );
+
+    // APIGateway lambdas integration
     api.addLambda('/products', apigwv2.HttpMethod.GET, getProductsListLambda);
 
     api.addLambda(
@@ -155,10 +213,12 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
     productsTable.grantReadWriteData(getProductsListLambda);
     productsTable.grantReadWriteData(getProductsByIdLambda);
     productsTable.grantWriteData(createProductLambda);
+    productsTable.grantWriteData(catalogBatchProcessLambda);
 
     stocksTable.grantReadWriteData(getProductsListLambda);
     stocksTable.grantReadWriteData(getProductsByIdLambda);
     stocksTable.grantWriteData(createProductLambda);
+    stocksTable.grantWriteData(catalogBatchProcessLambda);
 
     // grant IAM permissions to access S3Bucket
     importBucket.grantPut(importProductsFileLambda);
@@ -172,6 +232,21 @@ export class BackendNodejsAwsShopReactProductServiceStack extends cdk.Stack {
         prefix: 'uploaded/',
       },
     );
+
+    // lambdas event source configuration
+    catalogBatchProcessLambda.addEventSource(
+      new eventSources.SqsEventSource(catalogItemsQueue, {
+        batchSize: 5,
+        maxBatchingWindow: cdk.Duration.seconds(10),
+        reportBatchItemFailures: true, // lambda handler should properly process batch failure if set to 'true'
+      }),
+    );
+
+    // SQS queue grant permissions
+    catalogItemsQueue.grantSendMessages(importFileParserLambda);
+
+    // SNS topic grant permissions
+    createProductTopic.grantPublish(catalogBatchProcessLambda);
 
     // output
     new cdk.CfnOutput(this, 'ApiUrl', {

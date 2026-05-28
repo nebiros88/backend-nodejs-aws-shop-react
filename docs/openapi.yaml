@@ -7,6 +7,8 @@ servers:
 tags:
   - name: Products
     description: Product operations
+  - name: Import
+    description: Import operations
 
 paths:
   /products:
@@ -90,6 +92,26 @@ paths:
           required: true
           schema:
             type: 'string'
+
+  /import?name={name}:
+    get:
+      summary: get signed URL to upload .csv file
+      tags:
+        - Import
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: Name for the imported file
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: string
+                description: Signed URL
 
 components:
   schemas:
