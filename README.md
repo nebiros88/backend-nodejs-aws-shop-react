@@ -15,3 +15,8 @@
 | POST   | `/products`             | Create a new product                              |
 | GET    | `/products/{productId}` | Retrieve product details by product ID            |
 | GET    | `/import?name={name}`   | Generate a signed URL for uploading a `.csv` file |
+
+## Scripts
+
+- `npm run seed:products` - will seed database with the list of initial products
+- `npm run cdk:deploy` - will run cdk deployment and set environment variables from local .env

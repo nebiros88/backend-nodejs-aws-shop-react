@@ -2,6 +2,7 @@ import { Construct } from 'constructs';
 import * as apigwv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
+import { IHttpRouteAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2';
 
 interface ReusableHttpApiProps {
   apiName: string;
@@ -9,6 +10,7 @@ interface ReusableHttpApiProps {
 
 interface LambdaRouteOptions {
   queryParams?: string[];
+  authorizer?: IHttpRouteAuthorizer;
 }
 
 export class ReusableHttpApiGatewayConstruct extends Construct {
@@ -45,6 +47,7 @@ export class ReusableHttpApiGatewayConstruct extends Construct {
         `${path}-${method}-integration`,
         lambda,
       ),
+      ...(options?.authorizer && { authorizer: options?.authorizer }),
     });
 
     if (options?.queryParams) {
